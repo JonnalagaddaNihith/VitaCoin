@@ -6,7 +6,7 @@ import { UserData } from '@/lib/types';
 import { signOut } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { LogOut, Coins, Crown, TrendingUp } from 'lucide-react';
-import { VitaDashLogo } from './icons';
+import { VitaCoinLogo } from './icons';
 
 type HeaderProps = {
   user: UserData;
@@ -25,7 +25,7 @@ export function Header({ user }: HeaderProps) {
       <nav className="flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link href="/" className="flex items-center gap-3 text-xl font-bold font-headline text-primary md:text-lg group transition-all duration-200 hover:scale-105">
           <div className="relative">
-            <VitaDashLogo className="h-8 w-8 md:h-7 md:w-7 group-hover:animate-pulse" />
+            <VitaCoinLogo className="h-8 w-8 md:h-7 md:w-7 group-hover:animate-pulse" />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-ping opacity-75"></div>
           </div>
           <span className="sr-only">VitaCoin</span>

@@ -1,7 +1,7 @@
 import type { SVGProps } from 'react';
 import Image from 'next/image';
 
-export function VitaDashLogo(props: SVGProps<SVGSVGElement>) {
+export function VitaCoinLogo(props: SVGProps<SVGSVGElement>) {
     return (
         <Image
             src="/VitaCoin.png"
@@ -10,6 +10,8 @@ export function VitaDashLogo(props: SVGProps<SVGSVGElement>) {
             height={props.height || 24}
             className={props.className}
             style={{ objectFit: 'contain' }}
+            priority={true}
+            quality={95}
         />
     );
 }

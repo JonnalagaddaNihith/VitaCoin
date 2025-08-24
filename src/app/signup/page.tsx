@@ -1,5 +1,5 @@
 import { SignUpForm } from '@/components/SignUpForm';
-import { VitaDashLogo } from '@/components/icons';
+import { VitaCoinLogo } from '@/components/icons';
 import Link from 'next/link';
 
 export default function SignUpPage() {
@@ -16,7 +16,7 @@ export default function SignUpPage() {
         <div className="mb-8 flex justify-center">
           <Link href="/" className="flex items-center gap-3 text-3xl font-bold font-headline group transition-all duration-200 hover:scale-105">
             <div className="relative">
-              <VitaDashLogo className="h-10 w-10 group-hover:animate-pulse" />
+              <VitaCoinLogo className="h-10 w-10 group-hover:animate-pulse" />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-ping opacity-75"></div>
             </div>
             <span className="sr-only">VitaCoin</span>
