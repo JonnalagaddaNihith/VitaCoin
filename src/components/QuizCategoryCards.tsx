@@ -5,7 +5,7 @@ import { QuizCategory } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Brain, BookOpen, Code, Clock, Coins } from 'lucide-react';
+import { Calculator, Brain, BookOpen, Code, Clock, Coins, Sparkles, Trophy, Target } from 'lucide-react';
 import { EnhancedQuizModal } from './EnhancedQuizModal';
 
 const categoryData = {
@@ -13,29 +13,41 @@ const categoryData = {
     icon: Calculator,
     title: 'Mathematics',
     description: 'Test your mathematical skills with algebra, geometry, and arithmetic problems.',
-    color: 'bg-blue-500',
-    difficulty: 'Medium'
+    color: 'from-blue-500 to-blue-600',
+    bgColor: 'from-blue-50 to-blue-100',
+    borderColor: 'border-blue-200',
+    difficulty: 'Medium',
+    gradient: 'from-blue-400 to-blue-600'
   },
   aptitude: {
     icon: Brain,
     title: 'Aptitude',
     description: 'Challenge your logical reasoning and problem-solving abilities.',
-    color: 'bg-purple-500',
-    difficulty: 'Hard'
+    color: 'from-purple-500 to-purple-600',
+    bgColor: 'from-purple-50 to-purple-100',
+    borderColor: 'border-purple-200',
+    difficulty: 'Hard',
+    gradient: 'from-purple-400 to-purple-600'
   },
   grammar: {
     icon: BookOpen,
     title: 'Grammar',
     description: 'Improve your language skills with grammar and vocabulary questions.',
-    color: 'bg-green-500',
-    difficulty: 'Easy'
+    color: 'from-green-500 to-green-600',
+    bgColor: 'from-green-50 to-green-100',
+    borderColor: 'border-green-200',
+    difficulty: 'Easy',
+    gradient: 'from-green-400 to-green-600'
   },
   programming: {
     icon: Code,
     title: 'Programming',
     description: 'Test your coding knowledge across various programming languages.',
-    color: 'bg-orange-500',
-    difficulty: 'Hard'
+    color: 'from-orange-500 to-orange-600',
+    bgColor: 'from-orange-50 to-orange-100',
+    borderColor: 'border-orange-200',
+    difficulty: 'Hard',
+    gradient: 'from-orange-400 to-orange-600'
   }
 };
 
@@ -58,16 +70,16 @@ export function QuizCategoryCards({ onQuizComplete, userStreaks, lastQuizDates }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy': return 'bg-green-100 text-green-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Easy': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
+      case 'Medium': return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
+      case 'Hard': return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300';
+      default: return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
     }
   };
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Object.entries(categoryData).map(([key, data]) => {
           const category = key as QuizCategory;
           const IconComponent = data.icon;
@@ -75,35 +87,52 @@ export function QuizCategoryCards({ onQuizComplete, userStreaks, lastQuizDates }
           const canTake = canTakeQuiz(category);
           
           return (
-            <Card key={category} className="relative overflow-hidden">
-              <div className={`absolute top-0 left-0 right-0 h-1 ${data.color}`} />
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <IconComponent className="h-8 w-8 text-muted-foreground" />
-                  <Badge className={getDifficultyColor(data.difficulty)}>
+            <Card 
+              key={category} 
+              className={`group relative overflow-hidden border-0 bg-gradient-to-br ${data.bgColor} shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer`}
+              onClick={() => canTake && setSelectedCategory(category)}
+            >
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              {/* Top Border */}
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${data.color}`} />
+              
+              {/* Floating Elements */}
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+              </div>
+              
+              <CardHeader className="pb-3 relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${data.gradient} shadow-lg`}>
+                    <IconComponent className="h-6 w-6 text-white" />
+                  </div>
+                  <Badge className={`${getDifficultyColor(data.difficulty)} border font-semibold shadow-sm`}>
                     {data.difficulty}
                   </Badge>
                 </div>
-                <CardTitle className="text-lg">{data.title}</CardTitle>
-                <CardDescription className="text-sm">
+                <CardTitle className="text-xl font-bold text-foreground/90 mb-2">{data.title}</CardTitle>
+                <CardDescription className="text-sm text-foreground/70 leading-relaxed">
                   {data.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1">
-                    <Coins className="h-4 w-4 text-yellow-500" />
-                    <span>Up to 25 coins</span>
+              
+              <CardContent className="space-y-4 relative z-10">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 p-2 bg-white/50 rounded-lg border border-white/30">
+                    <Coins className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-semibold text-foreground/80">Up to 25 coins</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    <span>5 min</span>
+                  <div className="flex items-center gap-2 p-2 bg-white/50 rounded-lg border border-white/30">
+                    <Clock className="h-4 w-4 text-accent" />
+                    <span className="text-xs font-semibold text-foreground/80">5 min</span>
                   </div>
                 </div>
                 
                 {streak > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
+                  <div className="flex items-center justify-center">
+                    <Badge variant="secondary" className="text-xs bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30 font-semibold">
                       🔥 {streak} day streak
                     </Badge>
                   </div>
@@ -112,12 +141,28 @@ export function QuizCategoryCards({ onQuizComplete, userStreaks, lastQuizDates }
                 <Button
                   onClick={() => setSelectedCategory(category)}
                   disabled={!canTake}
-                  className="w-full"
-                  variant={canTake ? "default" : "secondary"}
+                  className={`w-full h-11 font-semibold transition-all duration-200 ${
+                    canTake 
+                      ? `bg-gradient-to-r ${data.gradient} hover:shadow-lg hover:shadow-${data.color.split('-')[1]}/25 text-white` 
+                      : 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
+                  }`}
                 >
-                  {canTake ? 'Take Quiz' : 'Completed Today'}
+                  {canTake ? (
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Take Quiz
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-4 w-4" />
+                      Completed Today
+                    </div>
+                  )}
                 </Button>
               </CardContent>
+              
+              {/* Hover Effect Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Card>
           );
         })}
