@@ -394,88 +394,143 @@ export const submitQuizResult = async (uid: string, category: QuizCategory, ques
 // --- BADGE FUNCTIONS ---
 
 export const getBadges = async (): Promise<Badge[]> => {
-  const badgesRef = collection(db, 'badges');
-  const querySnapshot = await getDocs(badgesRef);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Badge));
+  try {
+    const badgesRef = collection(db, 'badges');
+    const querySnapshot = await getDocs(badgesRef);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Badge)).filter(Boolean);
+  } catch (error) {
+    console.error('Error fetching badges:', error);
+    return [];
+  }
 };
 
 export const purchaseBadge = async (uid: string, badgeId: string) => {
-  const batch = writeBatch(db);
-  const userRef = doc(db, "users", uid);
-  const badgeRef = doc(db, "badges", badgeId);
-  
-  const [userSnap, badgeSnap] = await Promise.all([getDoc(userRef), getDoc(badgeRef)]);
-  
-  if (!userSnap.exists()) throw new Error("User not found");
-  if (!badgeSnap.exists()) throw new Error("Badge not found");
-  
-  const userData = userSnap.data() as UserData;
-  const badge = badgeSnap.data() as Badge;
-  
-  if (!badge.price) throw new Error("Badge is not purchasable");
-  if (userData.coins < badge.price) throw new Error("Insufficient coins");
-  if (userData.badges.includes(badgeId)) throw new Error("Badge already owned");
-  
-  batch.update(userRef, {
-    coins: userData.coins - badge.price,
-    badges: arrayUnion(badgeId)
-  });
-  
-  const transactionRef = doc(collection(db, `users/${uid}/transactions`));
-  const newTransaction: Omit<Transaction, 'id'> = {
-    amount: -badge.price,
-    description: `Purchased badge: ${badge.name}`,
-    timestamp: serverTimestamp() as Timestamp,
-    type: 'debit',
-    category: 'badge'
-  };
-  batch.set(transactionRef, newTransaction);
-  
-  await batch.commit();
+  try {
+    const batch = writeBatch(db);
+    const userRef = doc(db, "users", uid);
+    const badgeRef = doc(db, "badges", badgeId);
+    
+    const [userSnap, badgeSnap] = await Promise.all([getDoc(userRef), getDoc(badgeRef)]);
+    
+    if (!userSnap.exists()) throw new Error("User not found");
+    if (!badgeSnap.exists()) throw new Error("Badge not found");
+    
+    const userData = userSnap.data() as UserData;
+    const badge = badgeSnap.data() as Badge;
+    
+    // Validate user data structure
+    if (!userData || typeof userData !== 'object') throw new Error("Invalid user data");
+    if (typeof userData.coins !== 'number' || userData.coins < 0) throw new Error("Invalid user coin balance");
+    
+    // Validate badge data structure
+    if (!badge || typeof badge !== 'object') throw new Error("Invalid badge data");
+    if (!badge.id || typeof badge.id !== 'string') throw new Error("Invalid badge ID");
+    
+    // Ensure badges array exists and is valid
+    if (!userData.badges || !Array.isArray(userData.badges)) {
+      userData.badges = [];
+    }
+    
+    // Validate that badges array contains only strings
+    if (!userData.badges.every(id => typeof id === 'string')) {
+      userData.badges = userData.badges.filter(id => typeof id === 'string');
+    }
+    
+    if (!badge.price || typeof badge.price !== 'number' || badge.price <= 0) throw new Error("Badge is not purchasable");
+    if (userData.coins < badge.price) throw new Error("Insufficient coins");
+    if (!userData.badges || userData.badges.includes(badgeId)) throw new Error("Badge already owned");
+    
+    batch.update(userRef, {
+      coins: userData.coins - badge.price,
+      badges: arrayUnion(badgeId)
+    });
+    
+    const transactionRef = doc(collection(db, `users/${uid}/transactions`));
+    const newTransaction: Omit<Transaction, 'id'> = {
+      amount: -badge.price,
+      description: `Purchased badge: ${badge.name || 'Unknown Badge'}`,
+      timestamp: serverTimestamp() as Timestamp,
+      type: 'debit',
+      category: 'badge'
+    };
+    batch.set(transactionRef, newTransaction);
+    
+    await batch.commit();
+  } catch (error) {
+    console.error('Error purchasing badge:', error);
+    throw error; // Re-throw for user feedback
+  }
 };
 
 export const checkAndAwardBadges = async (uid: string, type: string, value: number, category?: string) => {
-  const badges = await getBadges();
-  const userRef = doc(db, "users", uid);
-  const userSnap = await getDoc(userRef);
-  
-  if (!userSnap.exists()) return;
-  const userData = userSnap.data() as UserData;
-  
-  const eligibleBadges = badges.filter(badge => {
-    if (userData.badges.includes(badge.id)) return false;
-    if (!badge.requirement) return false;
+  try {
+    const badges = await getBadges();
+    if (!badges || badges.length === 0) return;
     
-    const req = badge.requirement;
-    if (req.type !== type) return false;
-    if (category && req.category !== category) return false;
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
     
-    return value >= req.value;
-  });
-  
-  if (eligibleBadges.length > 0) {
-    const batch = writeBatch(db);
-    const newBadgeIds = eligibleBadges.map(b => b.id);
+    if (!userSnap.exists()) return;
+    const userData = userSnap.data() as UserData;
     
-    batch.update(userRef, {
-      badges: arrayUnion(...newBadgeIds)
-    });
-    
-    // Add notification for each badge
-    for (const badge of eligibleBadges) {
-      const notificationRef = doc(collection(db, `users/${uid}/notifications`));
-      const notification: Omit<Notification, 'id'> = {
-        userId: uid,
-        title: "New Badge Earned!",
-        message: `You've earned the "${badge.name}" badge!`,
-        type: 'achievement',
-        read: false,
-        timestamp: serverTimestamp() as Timestamp
-      };
-      batch.set(notificationRef, notification);
+    // Ensure badges array exists
+    if (!userData.badges) {
+      userData.badges = [];
     }
     
-    await batch.commit();
+    // Ensure badges array is valid and contains only strings
+    if (!Array.isArray(userData.badges)) {
+      userData.badges = [];
+    } else if (!userData.badges.every(id => typeof id === 'string')) {
+      userData.badges = userData.badges.filter(id => typeof id === 'string');
+    }
+    
+    const eligibleBadges = badges.filter(badge => {
+      // Validate badge structure
+      if (!badge || typeof badge !== 'object') return false;
+      if (!badge.id || typeof badge.id !== 'string') return false;
+      if (!userData.badges || userData.badges.includes(badge.id)) return false;
+      if (!badge.requirement || typeof badge.requirement !== 'object') return false;
+      
+      const req = badge.requirement;
+      if (!req.type || req.type !== type) return false;
+      if (category && req.category !== category) return false;
+      if (typeof req.value !== 'number') return false;
+      
+      return value >= req.value;
+    });
+    
+    if (eligibleBadges.length > 0) {
+      const batch = writeBatch(db);
+      const newBadgeIds = eligibleBadges.map(b => b.id).filter(Boolean);
+      
+      if (newBadgeIds.length > 0) {
+        batch.update(userRef, {
+          badges: arrayUnion(...newBadgeIds)
+        });
+        
+        // Add notification for each badge
+        for (const badge of eligibleBadges) {
+          if (badge && badge.name && typeof badge.name === 'string') {
+            const notificationRef = doc(collection(db, `users/${uid}/notifications`));
+            const notification: Omit<Notification, 'id'> = {
+              userId: uid,
+              title: "New Badge Earned!",
+              message: `You've earned the "${badge.name}" badge!`,
+              type: 'achievement',
+              read: false,
+              timestamp: serverTimestamp() as Timestamp
+            };
+            batch.set(notificationRef, notification);
+          }
+        }
+        
+        await batch.commit();
+      }
+    }
+  } catch (error) {
+    console.error('Error checking and awarding badges:', error);
+    // Don't throw error to prevent quiz submission from failing
   }
 };
 
