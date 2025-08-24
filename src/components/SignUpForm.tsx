@@ -5,12 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
+import { Chrome } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { signUp } from '@/lib/firebase';
+import { signUp, signInWithGoogle } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -38,14 +38,18 @@ export function SignUpForm() {
     try {
       await signUp(values.email, values.password, values.displayName);
       toast({
-        title: 'Account Created!',
-        description: 'Welcome to VitaDash. You have been awarded 500 coins!',
+        title: 'Verify Your Email',
+        description: 'We\'ve sent a verification link to your email. Please check your inbox and verify your email to continue.',
       });
-      router.push('/');
+      router.push('/login');
     } catch (error: any) {
       let errorMessage = 'An unexpected error occurred.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'This email is already in use.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password should be at least 6 characters.';
       }
       toast({
         title: 'Sign Up Failed',
@@ -58,6 +62,27 @@ export function SignUpForm() {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+      toast({
+        title: 'Successfully signed in with Google!',
+        description: 'Welcome to VitaDash!',
+      });
+      router.push('/');
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      toast({
+        title: 'Google Sign In Failed',
+        description: error.message || 'Failed to sign in with Google. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -65,6 +90,26 @@ export function SignUpForm() {
         <p className="text-muted-foreground">Join VitaDash and start earning coins today!</p>
         <div className="flex items-center justify-center gap-2 mt-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
           <span className="text-sm font-semibold text-primary">🎉 Welcome Bonus: 500 Coins!</span>
+        </div>
+      </div>
+      
+      <Button 
+        type="button" 
+        variant="outline" 
+        className="w-full flex items-center justify-center gap-2 py-3 border-border/50 hover:bg-accent/10 transition-colors duration-200"
+        onClick={handleGoogleSignUp}
+        disabled={isLoading}
+      >
+        <Chrome className="h-4 w-4" />
+        Continue with Google
+      </Button>
+      
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border/50"></span>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
         </div>
       </div>
       

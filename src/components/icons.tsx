@@ -1,13 +1,18 @@
 import type { SVGProps } from 'react';
 import Image from 'next/image';
 
-export function VitaCoinLogo(props: SVGProps<SVGSVGElement>) {
+interface VitaCoinLogoProps extends Omit<SVGProps<SVGSVGElement>, 'width' | 'height'> {
+    width?: number | `${number}`;
+    height?: number | `${number}`;
+}
+
+export function VitaCoinLogo({ width = 128, height = 128, ...props }: VitaCoinLogoProps) {
     return (
         <Image
             src="/VitaCoin.png"
             alt="VitaCoin Logo"
-            width={props.width || 24}
-            height={props.height || 24}
+            width={width}
+            height={height}
             className={props.className}
             style={{ objectFit: 'contain' }}
             priority={true}

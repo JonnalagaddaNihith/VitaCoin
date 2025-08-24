@@ -3,6 +3,12 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'VitaCoin - Earn Coins Through Learning',
   description: 'Join VitaCoin and earn coins by completing quizzes, maintaining streaks, and climbing the leaderboard. Test your knowledge in Mathematics, Aptitude, Grammar, and Programming.',
@@ -25,11 +31,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'VitaCoin - Earn Coins Through Learning',
     description: 'Join VitaCoin and earn coins by completing quizzes, maintaining streaks, and climbing the leaderboard.',
-  },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
   },
   robots: {
     index: true,
@@ -56,8 +57,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="icon" href="/vita-coin-logo.svg" type="image/svg+xml" />
         <meta name="theme-color" content="#1E40AF" />
+        <meta name="msapplication-navbutton-color" content="#1E40AF" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="#1E40AF" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="VitaCoin" />
       </head>
       <body className="antialiased">

@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { DailyStats } from '@/lib/types';
+import { DailyStats, Transaction } from '@/lib/types';
 import { getDailyStats, getUserData } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Coins, Trophy, AlertTriangle, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
+
+type ChartTransaction = Omit<Transaction, 'id'> & { timestamp: Date | { toDate: () => Date } };
 
 export function CoinAnalytics() {
   const { user } = useAuth();
@@ -49,10 +51,10 @@ export function CoinAnalytics() {
               loginBonus: Math.floor(currentCoins * 0.3), // Assume 30% from login bonuses
               penalties: 0,
               transactions: [
-                { category: 'quiz', type: 'credit', amount: Math.floor(currentCoins * 0.4), description: 'Quiz completion', timestamp: new Date() },
-                { category: 'bonus', type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Daily login bonus', timestamp: new Date() },
-                { category: 'welcome', type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Welcome bonus', timestamp: new Date() }
-              ]
+                { type: 'credit', amount: Math.floor(currentCoins * 0.4), description: 'Quiz completion', timestamp: new Date(), category: 'quiz' },
+                { type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Daily login bonus', timestamp: new Date(), category: 'bonus' },
+                { type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Welcome bonus', timestamp: new Date(), category: 'welcome' }
+              ] as ChartTransaction[]
             }
           ];
           setStats(sampleStats);
@@ -72,10 +74,10 @@ export function CoinAnalytics() {
               loginBonus: Math.floor(currentCoins * 0.3), // Assume 30% from login bonuses
               penalties: 0,
               transactions: [
-                { category: 'quiz', type: 'credit', amount: Math.floor(currentCoins * 0.4), description: 'Quiz completion', timestamp: new Date() },
-                { category: 'bonus', type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Daily login bonus', timestamp: new Date() },
-                { category: 'welcome', type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Welcome bonus', timestamp: new Date() }
-              ]
+                { type: 'credit', amount: Math.floor(currentCoins * 0.4), description: 'Quiz completion', timestamp: new Date(), category: 'quiz' },
+                { type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Daily login bonus', timestamp: new Date(), category: 'bonus' },
+                { type: 'credit', amount: Math.floor(currentCoins * 0.3), description: 'Welcome bonus', timestamp: new Date(), category: 'welcome' }
+              ] as ChartTransaction[]
             }
           ];
           setStats(sampleStats);
@@ -113,7 +115,9 @@ export function CoinAnalytics() {
   const chartData = hasData ? stats.map(stat => {
     const dayTransactions = stat.transactions || [];
     const loginBonus = dayTransactions
-      .filter(t => t.category === 'bonus' && t.type === 'credit')
+      .filter((t): t is ChartTransaction & { category: 'bonus' } => 
+        t.category === 'bonus' && t.type === 'credit'
+      )
       .reduce((sum, t) => sum + t.amount, 0);
     
     return {
@@ -122,7 +126,7 @@ export function CoinAnalytics() {
       quizzes: stat.quizzesTaken,
       bonus: loginBonus,
       penalties: stat.penalties,
-      transactions: dayTransactions
+      transactions: dayTransactions as ChartTransaction[]
     };
   }) : [
     {
@@ -137,11 +141,14 @@ export function CoinAnalytics() {
 
   // Calculate coin sources - ensure we always have meaningful data
   const categoryData = hasData ? [
-    { name: 'Quiz Rewards', 
+    { 
+      name: 'Quiz Rewards', 
       value: stats.reduce((sum, day) => {
         const dayTransactions = day.transactions || [];
         return sum + dayTransactions
-          .filter(t => t.category === 'quiz' && t.type === 'credit')
+          .filter((t): t is ChartTransaction & { category: 'quiz' } => 
+            t.category === 'quiz' && t.type === 'credit'
+          )
           .reduce((s, t) => s + t.amount, 0);
       }, 0), 
       color: '#8884d8' 
@@ -151,7 +158,9 @@ export function CoinAnalytics() {
       value: stats.reduce((sum, day) => {
         const dayTransactions = day.transactions || [];
         return sum + dayTransactions
-          .filter(t => t.category === 'bonus' && t.type === 'credit')
+          .filter((t): t is ChartTransaction & { category: 'bonus' } => 
+            t.category === 'bonus' && t.type === 'credit'
+          )
           .reduce((s, t) => s + t.amount, 0);
       }, 0), 
       color: '#82ca9d' 
@@ -161,7 +170,9 @@ export function CoinAnalytics() {
       value: stats.reduce((sum, day) => {
         const dayTransactions = day.transactions || [];
         return sum + dayTransactions
-          .filter(t => t.category === 'welcome' && t.type === 'credit')
+          .filter((t): t is ChartTransaction & { category: 'welcome' } => 
+            t.category === 'welcome' && t.type === 'credit'
+          )
           .reduce((s, t) => s + t.amount, 0);
       }, 0),
       color: '#FFC107'
@@ -340,7 +351,7 @@ export function CoinAnalytics() {
             Coin Sources
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {hasData ? 'Where your coins come from - track your earning sources! 🎯' : 'Estimated breakdown of your coin sources! 🎯'}
+            {hasData ? 'Where your coins come from - track your earning sources! ' : 'Estimated breakdown of your coin sources! '}
           </CardDescription>
         </CardHeader>
         <CardContent className="relative z-10">

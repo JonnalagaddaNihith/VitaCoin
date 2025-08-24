@@ -16,8 +16,9 @@ const categoryData = {
     color: 'from-blue-500 to-blue-600',
     bgColor: 'from-blue-50 to-blue-100',
     borderColor: 'border-blue-200',
-    difficulty: 'Medium',
-    gradient: 'from-blue-400 to-blue-600'
+    difficulty: 'medium',
+    gradient: 'from-blue-400 to-blue-600',
+    timeLimit: 60 // 1 minute for medium
   },
   aptitude: {
     icon: Brain,
@@ -26,8 +27,9 @@ const categoryData = {
     color: 'from-purple-500 to-purple-600',
     bgColor: 'from-purple-50 to-purple-100',
     borderColor: 'border-purple-200',
-    difficulty: 'Hard',
-    gradient: 'from-purple-400 to-purple-600'
+    difficulty: 'hard',
+    gradient: 'from-purple-400 to-purple-600',
+    timeLimit: 120 // 2 minutes for hard
   },
   grammar: {
     icon: BookOpen,
@@ -36,8 +38,9 @@ const categoryData = {
     color: 'from-green-500 to-green-600',
     bgColor: 'from-green-50 to-green-100',
     borderColor: 'border-green-200',
-    difficulty: 'Easy',
-    gradient: 'from-green-400 to-green-600'
+    difficulty: 'easy',
+    gradient: 'from-green-400 to-green-600',
+    timeLimit: 60 // 1 minute for easy
   },
   programming: {
     icon: Code,
@@ -46,8 +49,9 @@ const categoryData = {
     color: 'from-orange-500 to-orange-600',
     bgColor: 'from-orange-50 to-orange-100',
     borderColor: 'border-orange-200',
-    difficulty: 'Hard',
-    gradient: 'from-orange-400 to-orange-600'
+    difficulty: 'hard',
+    gradient: 'from-orange-400 to-orange-600',
+    timeLimit: 120 // 2 minutes for hard
   }
 };
 
@@ -69,12 +73,21 @@ export function QuizCategoryCards({ onQuizComplete, userStreaks, lastQuizDates }
   };
 
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
-      case 'Medium': return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
-      case 'Hard': return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300';
+    switch (difficulty.toLowerCase()) {
+      case 'easy': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
+      case 'medium': return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
+      case 'hard': return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300';
       default: return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
     }
+  };
+
+  const formatTimeLimit = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} min`;
+  };
+  
+  const formatDifficulty = (difficulty: string) => {
+    return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   };
 
   return (
@@ -109,7 +122,7 @@ export function QuizCategoryCards({ onQuizComplete, userStreaks, lastQuizDates }
                     <IconComponent className="h-6 w-6 text-white" />
                   </div>
                   <Badge className={`${getDifficultyColor(data.difficulty)} border font-semibold shadow-sm`}>
-                    {data.difficulty}
+                    {formatDifficulty(data.difficulty)}
                   </Badge>
                 </div>
                 <CardTitle className="text-xl font-bold text-foreground/90 mb-2">{data.title}</CardTitle>
@@ -126,7 +139,7 @@ export function QuizCategoryCards({ onQuizComplete, userStreaks, lastQuizDates }
                   </div>
                   <div className="flex items-center gap-2 p-2 bg-white/50 rounded-lg border border-white/30">
                     <Clock className="h-4 w-4 text-accent" />
-                    <span className="text-xs font-semibold text-foreground/80">5 min</span>
+                    <span className="text-xs font-semibold text-foreground/80">{formatTimeLimit(data.timeLimit)}</span>
                   </div>
                 </div>
                 

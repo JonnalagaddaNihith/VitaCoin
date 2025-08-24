@@ -7,7 +7,9 @@ import {
   onAuthStateChanged as firebaseOnAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -48,8 +50,9 @@ const db = getFirestore(app);
 
 export const signUp = async (email: string, password: string, displayName: string) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  await sendEmailVerification(userCredential.user);
+  await updateProfile(userCredential.user, { displayName });
   const user = userCredential.user;
-  await updateProfile(user, { displayName });
 
   // Create user document in Firestore
   const userRef = doc(db, "users", user.uid);
@@ -101,44 +104,67 @@ export const signUp = async (email: string, password: string, displayName: strin
 
 export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
-  const userCredential = await signInWithPopup(auth, provider);
-  const user = userCredential.user;
-  
-  // Check if user exists in Firestore, if not create them
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  
-  if (!userSnap.exists()) {
-    const initialUserData: Omit<UserData, 'uid' | 'email'> = {
-      displayName: user.displayName || 'User',
-      coins: 500,
-      lastBonusClaimed: null,
-      loginStreak: 0,
-      lastLoginDate: null,
-      quizStreaks: { math: 0, aptitude: 0, grammar: 0, programming: 0 },
-      lastQuizDates: { math: null, aptitude: null, grammar: null, programming: null },
-      badges: [],
-      totalQuizCorrect: { math: 0, aptitude: 0, grammar: 0, programming: 0 },
-      perfectDays: 0,
-      perfectWeeks: 0,
-      perfectMonths: 0,
-      createdAt: serverTimestamp() as Timestamp,
-    };
-    await setDoc(userRef, { ...initialUserData, email: user.email, uid: user.uid });
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
     
-    // Add welcome transaction
-    const transactionRef = doc(collection(db, `users/${user.uid}/transactions`));
-    const initialTransaction: Omit<Transaction, 'id'> = {
-      amount: 500,
-      description: "Welcome bonus for joining VitaDash!",
-      timestamp: serverTimestamp() as Timestamp,
-      type: 'credit',
-      category: 'welcome'
-    };
-    await setDoc(transactionRef, initialTransaction);
+    // Check if user is new
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      // New user - create user document with initial data
+      const userData = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || 'Anonymous',
+        coins: 500, // Initial bonus
+        lastBonusClaimed: null,
+        loginStreak: 0,
+        lastLoginDate: serverTimestamp(),
+        quizStreaks: { math: 0, aptitude: 0, grammar: 0, programming: 0 },
+        lastQuizDates: { math: null, aptitude: null, grammar: null, programming: null },
+        badges: [],
+        totalQuizCorrect: { math: 0, aptitude: 0, grammar: 0, programming: 0 },
+        perfectDays: 0,
+        perfectWeeks: 0,
+        perfectMonths: 0,
+        emailVerified: user.emailVerified,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      await setDoc(doc(db, 'users', user.uid), userData);
+      
+      // Add welcome notification
+      await addDoc(collection(db, 'users', user.uid, 'notifications'), {
+        type: 'welcome',
+        message: 'Welcome to VitaDash! You received 500 coins as a welcome bonus.',
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      
+      // Add welcome transaction
+      const transactionRef = doc(collection(db, `users/${user.uid}/transactions`));
+      await setDoc(transactionRef, {
+        amount: 500,
+        description: 'Welcome bonus for joining VitaDash!',
+        timestamp: serverTimestamp(),
+        type: 'credit',
+        category: 'welcome'
+      });
+    } else if (!user.emailVerified) {
+      // If email is not verified, update the user document
+      await updateDoc(doc(db, 'users', user.uid), {
+        emailVerified: user.emailVerified,
+        updatedAt: serverTimestamp()
+      });
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('Error signing in with Google:', error);
+    throw error;
   }
-  
-  return userCredential;
 };
 
 export const signIn = (email: string, password: string) => {

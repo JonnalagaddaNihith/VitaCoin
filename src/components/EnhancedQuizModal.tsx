@@ -61,6 +61,10 @@ export function EnhancedQuizModal({ isOpen, onClose, category, onQuizComplete }:
     return () => clearTimeout(timer);
   }, [timeLeft, quizStarted, quizCompleted]);
 
+  const getTimeLimit = (difficulty: 'easy' | 'medium' | 'hard'): number => {
+    return difficulty === 'hard' ? 120 : 60; // 2 minutes for hard, 1 minute for easy/medium
+  };
+
   const loadQuestions = async () => {
     setLoading(true);
     try {
@@ -68,7 +72,13 @@ export function EnhancedQuizModal({ isOpen, onClose, category, onQuizComplete }:
       setQuestions(questionsData);
       setSelectedAnswers(new Array(questionsData.length).fill(-1));
       setCurrentQuestion(0);
-      setTimeLeft(300);
+      
+      // Set time based on question difficulty (use first question's difficulty as reference)
+      const timeLimit = questionsData.length > 0 
+        ? getTimeLimit(questionsData[0].difficulty)
+        : 60; // Default to 1 minute if no questions
+      setTimeLeft(timeLimit);
+      
       setQuizCompleted(false);
       setResults(null);
     } catch (error) {
@@ -79,6 +89,11 @@ export function EnhancedQuizModal({ isOpen, onClose, category, onQuizComplete }:
   };
 
   const handleStartQuiz = () => {
+    // Reset timer based on first question's difficulty when starting the quiz
+    if (questions.length > 0) {
+      const timeLimit = getTimeLimit(questions[0].difficulty);
+      setTimeLeft(timeLimit);
+    }
     setQuizStarted(true);
   };
 
@@ -123,7 +138,8 @@ export function EnhancedQuizModal({ isOpen, onClose, category, onQuizComplete }:
     setQuizCompleted(false);
     setCurrentQuestion(0);
     setSelectedAnswers([]);
-    setTimeLeft(300);
+    // Reset to default time (will be updated when questions load)
+    setTimeLeft(60);
     setResults(null);
     onClose();
   };
@@ -171,8 +187,12 @@ export function EnhancedQuizModal({ isOpen, onClose, category, onQuizComplete }:
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
               <div className="text-center p-4 border rounded-lg">
                 <Clock className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-                <div className="font-semibold">5 Minutes</div>
-                <div className="text-sm text-muted-foreground">Time Limit</div>
+                <div className="font-semibold">
+                  {questions[0]?.difficulty === 'hard' ? '2 Minutes' : '1 Minute'}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {questions[0]?.difficulty === 'hard' ? 'Hard difficulty' : 'Easy/Medium difficulty'}
+                </div>
               </div>
               <div className="text-center p-4 border rounded-lg">
                 <Award className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
