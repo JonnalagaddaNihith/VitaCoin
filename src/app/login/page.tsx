@@ -19,8 +19,9 @@ export default function LoginPage() {
               <VitaDashLogo className="h-10 w-10 group-hover:animate-pulse" />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-ping opacity-75"></div>
             </div>
+            <span className="sr-only">VitaCoin</span>
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              VitaDash
+              VitaCoin
             </span>
           </Link>
         </div>

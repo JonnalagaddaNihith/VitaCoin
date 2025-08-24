@@ -190,13 +190,23 @@ export default function Dashboard() {
             </div>
             <QuizCategoryCards 
               onQuizComplete={handleQuizComplete}
-              userStreaks={userData.quizStreaks}
+              userStreaks={userData.quizStreaks || {
+                math: 0,
+                aptitude: 0,
+                grammar: 0,
+                programming: 0
+              }}
               lastQuizDates={userData.lastQuizDates ? {
                 math: userData.lastQuizDates.math?.toDate() || null,
                 aptitude: userData.lastQuizDates.aptitude?.toDate() || null,
                 grammar: userData.lastQuizDates.grammar?.toDate() || null,
                 programming: userData.lastQuizDates.programming?.toDate() || null
-              } : undefined}
+              } : {
+                math: null,
+                aptitude: null,
+                grammar: null,
+                programming: null
+              }}
             />
           </TabsContent>
           

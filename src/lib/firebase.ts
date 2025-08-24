@@ -322,16 +322,16 @@ export const submitQuizResult = async (uid: string, category: QuizCategory, ques
   
   // Calculate quiz streak
   const today = new Date();
-  const lastQuizDate = userData.lastQuizDates[category]?.toDate();
+  const lastQuizDate = userData.lastQuizDates?.[category]?.toDate();
   let newStreak = 1;
   
   if (lastQuizDate) {
     const daysDiff = Math.floor((today.getTime() - lastQuizDate.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff === 1) {
-      newStreak = userData.quizStreaks[category] + 1;
+      newStreak = (userData.quizStreaks?.[category] || 0) + 1;
     } else if (daysDiff > 1) {
       // Apply penalty for missed quiz
-      await applyPenalty(uid, 'missed_quiz', userData.quizStreaks[category] * 2);
+      await applyPenalty(uid, 'missed_quiz', (userData.quizStreaks?.[category] || 0) * 2);
       newStreak = 1;
     }
   }
@@ -341,7 +341,7 @@ export const submitQuizResult = async (uid: string, category: QuizCategory, ques
     coins: userData.coins + coinsEarned,
     [`quizStreaks.${category}`]: newStreak,
     [`lastQuizDates.${category}`]: serverTimestamp(),
-    [`totalQuizCorrect.${category}`]: userData.totalQuizCorrect[category] + correctAnswers
+    [`totalQuizCorrect.${category}`]: (userData.totalQuizCorrect?.[category] || 0) + correctAnswers
   };
   
   // Check for perfect day (all categories completed with 100% score)
