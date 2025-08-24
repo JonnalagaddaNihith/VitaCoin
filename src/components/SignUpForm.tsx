@@ -38,10 +38,10 @@ export function SignUpForm() {
     try {
       await signUp(values.email, values.password, values.displayName);
       toast({
-        title: 'Verify Your Email',
-        description: 'We\'ve sent a verification link to your email. Please check your inbox and verify your email to continue.',
+        title: 'Welcome to VitaCoin!',
+        description: 'Your account has been created successfully!',
       });
-      router.push('/login');
+      router.push('/');
     } catch (error: any) {
       let errorMessage = 'An unexpected error occurred.';
       if (error.code === 'auth/email-already-in-use') {

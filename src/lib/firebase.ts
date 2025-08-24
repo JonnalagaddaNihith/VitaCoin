@@ -9,7 +9,10 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendEmailVerification,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -50,9 +53,13 @@ const db = getFirestore(app);
 
 export const signUp = async (email: string, password: string, displayName: string) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  await sendEmailVerification(userCredential.user);
-  await updateProfile(userCredential.user, { displayName });
   const user = userCredential.user;
+  
+  // Update profile with display name
+  await updateProfile(user, { displayName });
+  
+  // Set persistence for the auth session
+  await setPersistence(auth, browserLocalPersistence);
 
   // Create user document in Firestore
   const userRef = doc(db, "users", user.uid);
@@ -104,6 +111,14 @@ export const signUp = async (email: string, password: string, displayName: strin
 
 export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
+  
+  // Add these scopes if you need additional permissions
+  provider.addScope('profile');
+  provider.addScope('email');
+  
+  // Set the authentication persistence
+  await setPersistence(auth, browserLocalPersistence);
+  
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
@@ -161,9 +176,19 @@ export const signInWithGoogle = async () => {
     }
     
     return user;
-  } catch (error) {
-    console.error('Error signing in with Google:', error);
-    throw error;
+  } catch (error: any) {
+    console.error("Error signing in with Google:", error);
+    
+    // More specific error handling
+    if (error.code === 'auth/unauthorized-domain') {
+      throw new Error('This domain is not authorized for OAuth operations. Please contact support.');
+    } else if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('The sign-in popup was closed before completing the sign-in process.');
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      throw new Error('An account already exists with the same email but different sign-in credentials.');
+    } else {
+      throw new Error(error.message || 'Failed to sign in with Google. Please try again.');
+    }
   }
 };
 
