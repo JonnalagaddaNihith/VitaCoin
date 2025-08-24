@@ -1,53 +1,111 @@
-# VitaCoin - Comprehensive Learning & Rewards Platform
+# 🚀 VitaCoin - Gamified Learning Platform
 
-VitaCoin is a gamified learning platform that rewards users with coins for daily activities, quizzes, and maintaining streaks. Built with Next.js, Firebase, and modern UI components.
+VitaCoin is an interactive learning platform that transforms education into an engaging experience by rewarding users with coins for their learning activities. Built with Next.js, Firebase, and modern UI components, VitaCoin makes learning fun and rewarding.
 
-## 🚀 Features
+## ✨ Key Features
 
-### Core Features
-- **Firebase Authentication** - Email/password and Google OAuth sign-in
-- **Daily Login Bonus** - Progressive rewards (Day 1: 100 coins, Day 2: 105 coins, etc.)
-- **Comprehensive Quiz System** - Separate daily quizzes for Math, Aptitude, Grammar, and Programming
-- **Badge System** - Purchasable badges (1000, 2000, 5000, 10000+ coins) and achievement badges
-- **Streak Tracking** - Login and quiz streaks with penalties for missed days
-- **Leaderboard** - Real-time rankings with in-app notifications for changes
-- **Analytics Dashboard** - Coin earnings graphs and daily statistics
-- **Transaction History** - Detailed log of all coin earnings and deductions
-- **Penalty System** - Motivational messages for missed activities
-- **Email Notifications** - SendGrid integration for reminders and streak alerts
+### 🎯 Core Functionality
+- **Secure Authentication** - Email/Password and Google OAuth sign-in with Firebase
+- **Daily Rewards** - Progressive coin bonuses for consecutive logins
+- **Interactive Quizzes** - Daily challenges across multiple categories:
+  - Mathematics (Medium difficulty, 1 min/quiz)
+  - Aptitude (Hard difficulty, 2 min/quiz)
+  - Grammar (Easy difficulty, 1 min/quiz)
+  - Programming (Hard difficulty, 2 min/quiz)
+- **Badge System** - Collectible badges with various rarities and achievements
+- **Streak Mechanics** - Maintain daily streaks with penalties for missed days
+- **Real-time Leaderboard** - Compete with other learners globally
 
-### Advanced Features
-- **In-app Notifications** - Real-time updates for achievements and leaderboard changes
-- **Perfect Day Tracking** - Bonus rewards for completing all quizzes with 100% scores
-- **Comprehensive Badge Categories**:
-  - Purchase badges (Bronze, Silver, Gold, Platinum, Diamond)
-  - Streak badges (1 day, 7 days, 30 days, 100 days)
-  - Performance badges (Perfect Day, Perfect Week, Perfect Month)
-  - Category-specific badges (Math Enthusiast, Logic Master, etc.)
+### 📊 Learning Analytics
+- **Performance Tracking** - Monitor your quiz scores and improvements
+- **Coin Analytics** - Visualize your earnings and spending patterns
+- **Achievement System** - Unlock badges for milestones and perfect scores
+- **Daily Progress** - Track your learning consistency and growth
 
-## 🛠 Setup Instructions
+### 🏆 Rewards & Motivation
+- **Streak Bonuses** - Earn more coins for maintaining daily streaks
+- **Perfect Scores** - Special rewards for 100% correct answers
+- **Category Mastery** - Badges for excelling in specific subjects
+- **Motivational System** - Encouraging messages and rewards for consistency
+
+### ⚠️ Penalty System
+VitaCoin implements a fair penalty system to encourage consistent engagement:
+
+#### Types of Penalties
+- **Missed Login Penalty**
+  - Triggered when you miss logging in for more than one day
+  - Penalty: `login_streak * 5` coins
+  - Example: 5-day streak broken → 25 coin penalty
+
+- **Missed Quiz Penalty**
+  - Applied when you miss a daily quiz for more than one day
+  - Penalty: `quiz_streak_for_category * 2` coins
+  - Example: 3-day streak in Programming → 6 coin penalty
+
+#### Key Features
+- **No Negative Balance** - Penalties won't reduce your coins below zero
+- **Motivational Messages** - Receive encouraging quotes when penalized
+- **Transparent Tracking** - All penalties are logged in your transaction history
+- **Streak Protection** - One-time forgiveness for occasional misses
+
+#### Avoiding Penalties
+1. Log in daily to maintain your login streak
+2. Complete at least one quiz per category each day
+3. Enable notifications for daily reminders
+4. Plan ahead for busy days by completing quizzes in advance
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ and npm
 - Firebase project with Firestore and Authentication enabled
-- SendGrid account (optional, for email notifications)
+- Git for version control
 
-### 1. Clone and Install Dependencies
+### Installation
 
-```bash
-git clone <repository-url>
-cd VitaCoin
-npm install
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/JonnalagaddaNihith/VitaCoin.git
+   cd VitaCoin
+   ```
 
-### 2. Firebase Setup
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com)
+### Firebase Configuration
+
+1. Create a new project in the [Firebase Console](https://console.firebase.google.com/)
 2. Enable Authentication with Email/Password and Google providers
-3. Create a Firestore database in production mode
-4. Get your Firebase configuration from Project Settings
+3. Set up Firestore database in production mode
+4. Configure your Firebase project:
+   - Go to Project Settings
+   - Under "Your apps", add a new web app
+   - Copy the configuration object
 
-### 3. Environment Variables
+5. Create a `.env.local` file in the root directory and add your Firebase config:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-bucket.appspot.com
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+   ```
+
+### Running the Application
+
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+2. Open [http://localhost:3000](http://localhost:3000) in your browser
+3. Build for production:
+   ```bash
+   npm run build
+   npm start
+   ```
 
 Create a `.env.local` file in the root directory:
 
@@ -137,21 +195,33 @@ Visit `http://localhost:3000` to see your VitaCoin app!
 
 ### Daily Activities
 - **Login Bonus**: Claim once per day, increases by 5 coins per streak day
-- **Quizzes**: Take one quiz per category per day (5 coins per correct answer)
-- **Streaks**: Maintain consecutive days for bonus multipliers
-- **Badges**: Purchase with coins or earn through achievements
 
-## 🏗 Architecture
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 
-### Tech Stack
-- **Frontend**: Next.js 15, React 18, TypeScript
-- **Backend**: Firebase (Auth, Firestore)
-- **UI**: Tailwind CSS, Radix UI components
-- **Charts**: Recharts
-- **Email**: SendGrid
-- **Forms**: React Hook Form + Zod validation
+## Contributing
 
-### Project Structure
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with by [Your Name]
+- Inspired by gamified learning platforms
+- Special thanks to all contributors
+
+## Project Structure
 ```
 src/
 ├── app/                 # Next.js app router
