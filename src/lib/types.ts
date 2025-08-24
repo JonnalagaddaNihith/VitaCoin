@@ -29,8 +29,11 @@ export interface UserData {
   };
   perfectDays: number; // Days with all quizzes completed correctly
   perfectWeeks: number;
+  totalQuizzesTaken: number;
+  rank?: number; // User's rank on the leaderboard
   perfectMonths: number;
   createdAt: Timestamp;
+  [key: string]: any; // Allow additional properties
 }
 
 export interface Transaction {

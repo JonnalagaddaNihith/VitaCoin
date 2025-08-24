@@ -37,13 +37,15 @@ export function Header({ user }: HeaderProps) {
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-3 lg:gap-6">
         <div className="ml-auto flex-1 sm:flex-initial">
           <div className="flex items-center gap-4">
-            {/* Stats Display */}
-            <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 text-sm font-semibold border border-primary/20 backdrop-blur-sm">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-foreground/80">#{user.rank || 'N/A'}</span>
+            {/* Stats Display - Only show rank if user has one */}
+            {user.rank && (
+              <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 text-sm font-semibold border border-primary/20 backdrop-blur-sm">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span className="text-foreground/80">#{user.rank}</span>
+                </div>
               </div>
-            </div>
+            )}
             
             {/* Coin Balance */}
             <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-primary/10 to-primary/20 px-4 py-2 text-sm font-semibold border border-primary/30 backdrop-blur-sm shadow-lg shadow-primary/10">
