@@ -11,7 +11,7 @@ type LeaderboardProps = {
 };
 
 const getRankIcon = (rank: number) => {
-  if (rank === 1) return <Crown className="h-6 w-6 text-primary animate-pulse" />;
+  if (rank === 1) return <Crown className="h-6 w-6 text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.8)] animate-pulse" />;
   if (rank === 2) return <Trophy className="h-5 w-5 text-accent" />;
   if (rank === 3) return <Medal className="h-5 w-5 text-primary/70" />;
   return <span className="w-5 text-center font-bold text-muted-foreground">{rank}</span>;
@@ -70,12 +70,11 @@ export function Leaderboard({ users, currentUserId }: LeaderboardProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all duration-200">
-                      <AvatarImage src={`https://placehold.co/40x40.png`} alt={user.displayName} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-foreground font-semibold">
-                        {user.displayName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center ring-2 ring-border/50 group-hover:ring-primary/30 transition-all duration-200 bg-gradient-to-br from-primary/20 to-accent/20">
+                      <span className="text-foreground font-semibold text-xl select-none">
+                        {user.displayName?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
                     <div className="flex flex-col">
                       <span className="font-semibold text-foreground/90 truncate">{user.displayName}</span>
                       {user.uid === currentUserId && (

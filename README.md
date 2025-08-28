@@ -29,30 +29,61 @@ VitaCoin is an interactive learning platform that transforms education into an e
 - **Motivational System** - Encouraging messages and rewards for consistency
 
 ### ⚠️ Penalty System
-VitaCoin implements a fair penalty system to encourage consistent engagement:
+VitaCoin implements a fair penalty system to encourage consistent engagement and learning habits.
 
 #### Types of Penalties
 - **Missed Login Penalty**
-  - Triggered when you miss logging in for more than one day
-  - Penalty: `login_streak * 5` coins
-  - Example: 5-day streak broken → 25 coin penalty
+  - **10 coins** deducted for each missed day
+  - **Login streak resets to 0** when missing a day
+  - Maximum of 30 days of penalties applied at once
+  - Applied automatically on next login
+  - Each penalty is recorded with the specific date it applies to
+  - Previous streak length is preserved in transaction history for reference
 
 - **Missed Quiz Penalty**
-  - Applied when you miss a daily quiz for more than one day
-  - Penalty: `quiz_streak_for_category * 2` coins
-  - Example: 3-day streak in Programming → 6 coin penalty
+  - **10 coins** deducted for each day without completing a quiz
+  - Separate penalties for each quiz category
+  - Applied automatically when checking daily progress
 
 #### Key Features
 - **No Negative Balance** - Penalties won't reduce your coins below zero
-- **Motivational Messages** - Receive encouraging quotes when penalized
-- **Transparent Tracking** - All penalties are logged in your transaction history
-- **Streak Protection** - One-time forgiveness for occasional misses
+- **Detailed Transaction History** - Each penalty is logged with date and reason
+- **Streak Reset** - Missing a day resets your login streak to 0
+- **Transparent Tracking** - Transaction history shows both penalties and streak resets
+- **Streak Protection** - Maintain your streaks to avoid penalties
+- **Transparent System** - All penalties are clearly visible in your transaction history
+
+#### How Penalties Work
+1. **Login Penalties**
+   - Checked when you log in
+   - Applies to all days since your last login (up to 30 days)
+   - Each missed day incurs a 10-coin penalty
+
+2. **Quiz Penalties**
+   - Checked daily at 23:59 IST
+   - Applies to each category where no quiz was completed
+   - Each missed category incurs a 10-coin penalty
 
 #### Avoiding Penalties
-1. Log in daily to maintain your login streak
-2. Complete at least one quiz per category each day
-3. Enable notifications for daily reminders
-4. Plan ahead for busy days by completing quizzes in advance
+1. **Log in daily** to maintain your login streak and avoid login penalties
+2. **Complete at least one quiz per day** to avoid quiz penalties
+3. **Check the app regularly** to stay on top of your learning goals
+4. **View your transaction history** to track any penalties applied
+
+#### Example Scenario
+If you miss 3 days of logins and quizzes:
+- **Day 1 Missed**: 10 coins penalty (login) + 10 coins (quiz) = 20 coins
+- **Day 2 Missed**: 10 coins penalty (login) + 10 coins (quiz) = 20 coins
+- **Day 3 Missed**: 10 coins penalty (login) + 10 coins (quiz) = 20 coins
+
+Total penalty: **60 coins** (recorded as separate transactions for each day)
+
+#### Viewing Penalties
+All penalties are visible in your transaction history with the following details:
+- Date of the penalty
+- Amount deducted
+- Reason (e.g., "Missed login penalty")
+- Category (for quiz penalties)
 
 ## 🚀 Getting Started
 

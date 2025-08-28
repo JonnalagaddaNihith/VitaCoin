@@ -3,7 +3,7 @@
 
 import { config } from 'dotenv';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, setDoc } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, writeBatch, getDocs } from "firebase/firestore";
 import { QuizQuestion, Badge } from "../lib/types";
 
 // Load environment variables from .env
@@ -229,7 +229,10 @@ const sampleQuestions: Omit<QuizQuestion, 'id'>[] = [
   }
 ];
 
-const sampleBadges: Omit<Badge, 'id'>[] = [
+// Define badge data without IDs
+interface BaseBadge extends Omit<Badge, 'id'> {}
+
+const baseBadges: BaseBadge[] = [
   // Purchasable Badges
   {
     name: 'Bronze Collector',
@@ -406,16 +409,52 @@ async function initializeQuestions() {
   console.log(`✅ Added ${sampleQuestions.length} quiz questions`);
 }
 
-async function initializeBadges() {
-  console.log('Initializing badges...');
-  
-  for (const badge of sampleBadges) {
-    const docRef = doc(collection(db, 'badges'));
-    await setDoc(docRef, badge);
+const initializeBadges = async () => {
+  try {
+    const batch = writeBatch(db);
+    const badgesRef = collection(db, 'badges');
+    
+    // First, check if badges already exist
+    const snapshot = await getDocs(badgesRef);
+    if (!snapshot.empty) {
+      console.log('Deleting existing badges before reinitialization...');
+      // Delete existing badges to avoid duplicates
+      const deleteBatch = writeBatch(db);
+      snapshot.docs.forEach((doc: any) => {
+        deleteBatch.delete(doc.ref);
+      });
+      await deleteBatch.commit();
+    }
+
+    console.log('Initializing badges...');
+    
+    // Add each badge with its ID as the document ID
+    const badgesToCreate = baseBadges.map((badge, index) => ({
+      id: `badge-${index + 1}`,
+      ...badge
+    }));
+    
+    badgesToCreate.forEach(badge => {
+      const badgeRef = doc(db, 'badges', badge.id);
+      batch.set(badgeRef, {
+        id: badge.id,
+        name: badge.name,
+        description: badge.description,
+        price: badge.price || 0,
+        icon: badge.icon || 'award',
+        color: badge.color || 'gray',
+        ...(badge.requirement && { requirement: badge.requirement }),
+        createdAt: new Date().toISOString()
+      });
+    });
+    
+    await batch.commit();
+    console.log(`✅ Successfully initialized ${badgesToCreate.length} badges`);
+  } catch (error) {
+    console.error('❌ Error initializing badges:', error);
+    throw error;
   }
-  
-  console.log(`✅ Added ${sampleBadges.length} badges`);
-}
+};
 
 async function main() {
   try {
@@ -427,7 +466,6 @@ async function main() {
     console.log('🎉 VitaCoin data initialization completed successfully!');
     console.log('\nYour VitaCoin app now has:');
     console.log(`- ${sampleQuestions.length} quiz questions across 4 categories`);
-    console.log(`- ${sampleBadges.length} badges (purchasable and achievement-based)`);
     console.log('\nUsers can now:');
     console.log('- Take daily quizzes in Math, Aptitude, Grammar, and Programming');
     console.log('- Earn coins and maintain streaks');

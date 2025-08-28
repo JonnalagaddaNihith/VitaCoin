@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Transaction } from "@/lib/types";
-import { History, ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Coins } from "lucide-react";
+import { History, ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Coins, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 
 type TransactionHistoryProps = {
@@ -19,7 +19,7 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   return (
-    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-card via-card to-accent/5 shadow-xl shadow-accent/10 hover:shadow-2xl hover:shadow-accent/20 transition-all duration-300 hover:scale-[1.02]">
+    <Card className="group relative h-full flex flex-col overflow-hidden border-0 bg-gradient-to-br from-card via-card to-accent/5 shadow-xl shadow-accent/10 hover:shadow-2xl hover:shadow-accent/20 transition-all duration-300 hover:scale-[1.02]">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
@@ -35,26 +35,72 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
           A detailed log of your recent coin activity and earnings.
         </CardDescription>
       </CardHeader>
-      <CardContent className="relative z-10">
+      <CardContent className="relative z-10 flex-1 flex flex-col p-0">
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+        <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-r from-primary/10 to-accent/10 border-b border-primary/20">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <TrendingUp className="h-4 w-4 text-green-500" />
               <span className="text-xs font-medium text-muted-foreground">Total Earned</span>
             </div>
-            <div className="text-lg font-bold text-green-600">{totalCredits.toLocaleString()}</div>
+            <div className="text-lg font-bold text-green-600">
+              {transactions
+                .filter(tx => tx.type === 'credit')
+                .reduce((sum, tx) => sum + tx.amount, 0)
+                .toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Quizzes: {transactions
+                .filter(tx => tx.type === 'credit' && tx.category === 'quiz')
+                .reduce((sum, tx) => sum + tx.amount, 0)
+                .toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Bonuses: {transactions
+                .filter(tx => tx.type === 'credit' && tx.category === 'bonus')
+                .reduce((sum, tx) => sum + tx.amount, 0)
+                .toLocaleString()}
+            </div>
           </div>
+          
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <TrendingDown className="h-4 w-4 text-red-500" />
               <span className="text-xs font-medium text-muted-foreground">Total Spent</span>
             </div>
-            <div className="text-lg font-bold text-red-600">{totalDebits.toLocaleString()}</div>
+            <div className="text-lg font-bold text-red-600">
+              {transactions
+                .filter(tx => tx.type === 'debit')
+                .reduce((sum, tx) => sum + tx.amount, 0)
+                .toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Badges: {transactions
+                .filter(tx => tx.type === 'debit' && tx.category === 'badge')
+                .reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+                .toLocaleString()}
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span className="text-xs font-medium text-muted-foreground">Penalties</span>
+            </div>
+            <div className="text-lg font-bold text-amber-600">
+              {transactions
+                .filter(tx => tx.type === 'debit' && tx.category === 'penalty')
+                .reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+                .toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {transactions.filter(tx => tx.category === 'penalty').length} incidents
+            </div>
           </div>
         </div>
         
-        <ScrollArea className="h-72">
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full w-full">
           {transactions.length > 0 ? (
             transactions.map((tx, index) => (
               <div key={tx.id} className="group/item">
@@ -99,7 +145,8 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
               <p className="text-sm text-muted-foreground mt-1">Complete quizzes to start earning coins!</p>
             </div>
           )}
-        </ScrollArea>
+          </ScrollArea>
+        </div>
         
         {/* Quick Actions */}
         {transactions.length > 0 && (

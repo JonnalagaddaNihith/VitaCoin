@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge, UserData } from '@/lib/types';
-import { getBadges, purchaseBadge, getUserData } from '@/lib/firebase';
+import { getBadges, purchaseBadge, getUserData, db } from '@/lib/firebase';
+import { writeBatch, collection, doc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge as BadgeUI } from '@/components/ui/badge';
@@ -34,18 +35,46 @@ export function BadgeStore() {
       if (!user) return;
       
       try {
+        setLoading(true);
         const [badgeData, userDataResult] = await Promise.all([
           getBadges(),
           getUserData(user.uid)
         ]);
         
-        // Use sample data if Firebase collection is empty
-        const finalBadgeData = badgeData.length > 0 ? badgeData : sampleBadges;
-        setBadges(finalBadgeData);
+        // If no badges in Firestore, initialize with sample badges
+        if (badgeData.length === 0) {
+          console.log('Initializing badges in Firestore...');
+          const batch = writeBatch(db);
+          
+          // Add sample badges to Firestore
+          sampleBadges.forEach(badge => {
+            const badgeRef = doc(collection(db, 'badges'), badge.id);
+            batch.set(badgeRef, {
+              id: badge.id, // Ensure ID is included in the document data
+              name: badge.name,
+              description: badge.description,
+              price: badge.price || null,
+              requirement: badge.requirement || null,
+              icon: badge.icon,
+              color: badge.color,
+              createdAt: serverTimestamp()
+            });
+          });
+          
+          await batch.commit();
+          console.log('Sample badges initialized in Firestore');
+          
+          // Refresh badges after initialization
+          const updatedBadgeData = await getBadges();
+          setBadges(updatedBadgeData.length > 0 ? updatedBadgeData : sampleBadges);
+        } else {
+          setBadges(badgeData);
+        }
+        
         setUserData(userDataResult);
       } catch (error) {
-        console.error('Error fetching badge data:', error);
-        // Fallback to sample data on error
+        console.error('Error initializing badges:', error);
+        // Fallback to sample badges on error
         setBadges(sampleBadges);
       } finally {
         setLoading(false);
@@ -56,22 +85,67 @@ export function BadgeStore() {
   }, [user]);
 
   const handlePurchase = async (badgeId: string) => {
-    if (!user || !userData) return;
+    if (!user || !userData) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to purchase badges.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setPurchasing(badgeId);
     try {
+      // Find the badge in the local state first
+      const badgeToPurchase = badges.find(b => b.id === badgeId);
+      if (!badgeToPurchase) {
+        throw new Error('The selected badge could not be found. Please refresh the page and try again.');
+      }
+      
+      // Check if user already owns the badge
+      if (userData.badges?.includes(badgeId)) {
+        throw new Error(`You already own the "${badgeToPurchase.name}" badge!`);
+      }
+      
+      // Check if badge is purchasable
+      if (!badgeToPurchase.price || badgeToPurchase.price <= 0) {
+        throw new Error('This badge is not available for purchase.');
+      }
+      
+      // Check if user has enough coins
+      if (userData.coins < badgeToPurchase.price) {
+        throw new Error(`You need ${badgeToPurchase.price - userData.coins} more coins to purchase this badge.`);
+      }
+      
+      // Proceed with the purchase
       await purchaseBadge(user.uid, badgeId);
+      
+      // Refresh user data to get updated badges and coin balance
       const updatedUserData = await getUserData(user.uid);
       setUserData(updatedUserData);
       
       toast({
         title: "Badge Purchased!",
-        description: "You've successfully purchased this badge.",
+        description: `You've successfully purchased the "${badgeToPurchase.name}" badge for ${badgeToPurchase.price} coins.`,
       });
+      
     } catch (error: any) {
+      console.error('Purchase error:', error);
+      
+      // More specific error messages for common cases
+      let errorMessage = error.message || "Failed to complete the purchase. Please try again.";
+      
+      if (error.message.includes('not found') || error.message.includes('Invalid badge ID')) {
+        errorMessage = "The selected badge could not be found. Please try refreshing the page.";
+      } else if (error.message.includes('already owned')) {
+        errorMessage = `You already own this badge!`;
+      } else if (error.message.includes('insufficient coins') || error.message.includes('not enough coins')) {
+        errorMessage = `Insufficient coins to complete this purchase.`;
+      }
+      
       toast({
         title: "Purchase Failed",
-        description: error.message || "Failed to purchase badge.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -196,13 +270,17 @@ export function BadgeStore() {
                       </div>
                       <h3 className="font-bold text-lg text-foreground/90">{badge.name}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{badge.description}</p>
-                      <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+                      <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20 mb-4">
                         <Coins className="h-5 w-5 text-primary" />
-                        <span className="font-bold text-lg text-primary">{badge.price?.toLocaleString()}</span>
+                        <span className={`font-bold text-lg ${
+                          (userData?.coins || 0) >= (badge.price || 0) ? 'text-primary' : 'text-destructive'
+                        }`}>
+                          {(userData?.coins || 0).toLocaleString()} / {badge.price?.toLocaleString()}
+                        </span>
                       </div>
                       <Button
                         onClick={() => handlePurchase(badge.id)}
-                        disabled={isOwned || !canAfford || purchasing === badge.id}
+                        disabled={isOwned || purchasing === badge.id || !canAfford}
                         className={`w-full h-11 font-semibold transition-all duration-200 ${
                           isOwned 
                             ? 'bg-green-500 hover:bg-green-600 text-white' 
@@ -212,9 +290,9 @@ export function BadgeStore() {
                         }`}
                       >
                         {purchasing === badge.id ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            Purchasing...
+                            Processing...
                           </div>
                         ) : isOwned ? (
                           <div className="flex items-center gap-2">
@@ -224,12 +302,12 @@ export function BadgeStore() {
                         ) : !canAfford ? (
                           <div className="flex items-center gap-2">
                             <Lock className="h-4 w-4" />
-                            Insufficient Coins
+                            Need {(badge.price ?? 0) - (userData?.coins || 0)} more coins
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4" />
-                            Purchase
+                            Buy for {badge.price?.toLocaleString()} coins
                           </div>
                         )}
                       </Button>

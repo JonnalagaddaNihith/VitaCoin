@@ -46,8 +46,8 @@ const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // --- AUTH FUNCTIONS ---
 
@@ -448,7 +448,19 @@ export const getBadges = async (): Promise<Badge[]> => {
   try {
     const badgesRef = collection(db, 'badges');
     const querySnapshot = await getDocs(badgesRef);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Badge)).filter(Boolean);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Ensure we have all required fields with proper types
+      return {
+        id: doc.id,
+        name: data.name || 'Unnamed Badge',
+        description: data.description || '',
+        price: data.price || 0,
+        icon: data.icon || 'award',
+        color: data.color || 'gray',
+        ...(data.requirement && { requirement: data.requirement })
+      } as Badge;
+    });
   } catch (error) {
     console.error('Error fetching badges:', error);
     return [];
