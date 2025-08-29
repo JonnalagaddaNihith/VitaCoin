@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [claimLoading, setClaimLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [userRank, setUserRank] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -46,8 +47,14 @@ export default function Dashboard() {
       const fetchData = async () => {
         const data = await getUserData(user.uid);
         setUserData(data);
-        const leaders = await getLeaderboard();
+        const leaders = await getLeaderboard(1000); // Get more users for accurate ranking
         setLeaderboard(leaders);
+        
+        // Calculate user's rank
+        if (data) {
+          const userWithRank = leaders.findIndex(u => u.uid === user.uid);
+          setUserRank(userWithRank !== -1 ? userWithRank + 1 : null);
+        }
         const userTransactions = await getTransactions(user.uid);
         setTransactions(userTransactions);
         
@@ -165,7 +172,7 @@ export default function Dashboard() {
           
           <TabsContent value="dashboard" className="space-y-8 mt-8">
             <div className="grid gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-              <BalanceCard balance={userData.coins} />
+              <BalanceCard balance={userData.coins} rank={userRank} />
               <DailyBonusCard 
                 onClaim={handleClaimBonus} 
                 canClaim={canClaimBonus()} 

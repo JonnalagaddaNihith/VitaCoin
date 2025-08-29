@@ -6,15 +6,15 @@ interface VitaCoinLogoProps extends Omit<SVGProps<SVGSVGElement>, 'width' | 'hei
     height?: number | `${number}`;
 }
 
-export function VitaCoinLogo({ width = 128, height = 128, ...props }: VitaCoinLogoProps) {
+export function VitaCoinLogo({ width = 384, height = 384, ...props }: VitaCoinLogoProps) {
     return (
         <Image
             src="/VitaCoin.png"
             alt="VitaCoin Logo"
             width={width}
             height={height}
-            className={props.className}
-            style={{ objectFit: 'contain' }}
+            className={`w-full h-auto max-w-[384px] ${props.className || ''}`}
+            style={{ objectFit: 'contain', ...props.style }}
             priority={true}
             quality={95}
         />

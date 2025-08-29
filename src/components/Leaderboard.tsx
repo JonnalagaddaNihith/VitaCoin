@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { UserData } from "@/lib/types";
-import { Crown, Medal, Trophy, TrendingUp, Coins } from "lucide-react";
+import { Crown, Medal, Trophy, TrendingUp, Coins, ChevronLeft, ChevronRight } from "lucide-react";
 
 type LeaderboardProps = {
   users: UserData[];
@@ -12,8 +14,8 @@ type LeaderboardProps = {
 
 const getRankIcon = (rank: number) => {
   if (rank === 1) return <Crown className="h-6 w-6 text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.8)] animate-pulse" />;
-  if (rank === 2) return <Trophy className="h-5 w-5 text-accent" />;
-  if (rank === 3) return <Medal className="h-5 w-5 text-primary/70" />;
+  if (rank === 2) return <Trophy className="h-5 w-5 text-accent drop-shadow-[0_0_4px_rgba(255,255,255,0.8)] animate-pulse" />;
+  if (rank === 3) return <Medal className="h-5 w-5 text-primary/70 drop-shadow-[0_0_4px_rgba(255,255,255,0.8)] animate-pulse" />;
   return <span className="w-5 text-center font-bold text-muted-foreground">{rank}</span>;
 };
 
@@ -21,10 +23,26 @@ const getRankBadge = (rank: number) => {
   if (rank === 1) return "bg-gradient-to-r from-primary to-yellow-400 text-primary-foreground";
   if (rank === 2) return "bg-gradient-to-r from-gray-400 to-gray-300 text-white";
   if (rank === 3) return "bg-gradient-to-r from-yellow-700 to-yellow-600 text-white";
-  return "bg-secondary text-muted-foreground";
+  if (rank <= 10) return "bg-secondary/80 text-muted-foreground";
 };
 
 export function Leaderboard({ users, currentUserId }: LeaderboardProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+
+  // Get current leaderboard items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUsers = users.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  // Reset to first page when users change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [users]);
   return (
     <Card className="xl:col-span-2 group relative overflow-hidden border-0 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl shadow-primary/10 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]">
       {/* Background Pattern */}
@@ -52,7 +70,7 @@ export function Leaderboard({ users, currentUserId }: LeaderboardProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user, index) => (
+            {currentUsers.map((user, index) => (
               <TableRow 
                 key={`${user.uid}-${index}`} 
                 className={`transition-all duration-200 hover:bg-primary/5 ${
@@ -63,8 +81,12 @@ export function Leaderboard({ users, currentUserId }: LeaderboardProps) {
               >
                 <TableCell>
                   <div className="flex items-center justify-center">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${getRankBadge(index + 1)} shadow-lg`}>
-                      {getRankIcon(index + 1)}
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentPage === 1 ? getRankBadge(index + 1) : "bg-secondary/50 text-muted-foreground"} shadow-lg`}>
+                      {currentPage === 1 ? getRankIcon(index + 1) : (
+                        <span className="text-sm font-bold text-muted-foreground">
+                          {index + 1 + (currentPage - 1) * itemsPerPage}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </TableCell>
@@ -96,17 +118,44 @@ export function Leaderboard({ users, currentUserId }: LeaderboardProps) {
           </TableBody>
         </Table>
         
-        {/* Stats Summary */}
-        <div className="mt-6 pt-4 border-t border-border/50">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              <span>Total Players: {users.length}</span>
+        {/* Pagination and Top Score */}
+        <div className="mt-4">
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center px-1">
+              <div className="flex-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+              </div>
+              <div className="flex-1 text-center">
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </div>
+              <div className="flex-1 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="gap-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-accent" />
-              <span>Top Score: {users[0]?.coins.toLocaleString() || 0}</span>
-            </div>
+          )}
+          <div className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Coins className="h-4 w-4 text-accent" />
+            <span>Top Score: {users[0]?.coins.toLocaleString() || 0}</span>
           </div>
         </div>
       </CardContent>

@@ -8,11 +8,8 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
-  sendEmailVerification,
-  sendPasswordResetEmail,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -30,9 +27,7 @@ import {
   where,
   addDoc,
   updateDoc,
-  increment,
   arrayUnion,
-  arrayRemove
 } from "firebase/firestore";
 import { UserData, Transaction, QuizQuestion, QuizResult, Notification, Badge, QuizCategory, LeaderboardEntry } from './types';
 

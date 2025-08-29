@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { Transaction } from "@/lib/types";
-import { History, ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Coins, AlertTriangle } from "lucide-react";
+import { History, ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Coins, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 
 type TransactionHistoryProps = {
@@ -10,6 +12,23 @@ type TransactionHistoryProps = {
 };
 
 export function TransactionHistory({ transactions }: TransactionHistoryProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+  // Get current transactions
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  // Reset to first page when transactions change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions]);
+
   const totalCredits = transactions
     .filter(tx => tx.type === 'credit')
     .reduce((sum, tx) => sum + tx.amount, 0);
@@ -99,66 +118,71 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
           </div>
         </div>
         
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full w-full">
-          {transactions.length > 0 ? (
-            transactions.map((tx, index) => (
-              <div key={tx.id} className="group/item">
+        <div className="space-y-4 pr-1">
+          {currentTransactions.map((transaction, index) => (
+              <div key={transaction.id} className="group/item">
                 <div className="flex items-center gap-4 py-3 px-2 rounded-lg transition-all duration-200 hover:bg-secondary/50 group-hover/item:bg-secondary/30">
                   <div className={`p-2 rounded-full ${
-                    tx.type === 'credit' 
+                    transaction.type === 'credit' 
                       ? 'bg-green-100 text-green-600' 
                       : 'bg-red-100 text-red-600'
                   }`}>
-                    {tx.type === 'credit' ? (
+                    {transaction.type === 'credit' ? (
                       <ArrowUpCircle className="h-5 w-5" />
                     ) : (
                       <ArrowDownCircle className="h-5 w-5" />
                     )}
                   </div>
                   <div className="grid gap-1 flex-1">
-                    <p className="text-sm font-semibold leading-none text-foreground/90">{tx.description}</p>
+                    <p className="text-sm font-semibold leading-none text-foreground/90">{transaction.description}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Coins className="h-3 w-3" />
-                      {formatDistanceToNow(tx.timestamp.toDate(), { addSuffix: true })}
+                      {formatDistanceToNow(transaction.timestamp.toDate(), { addSuffix: true })}
                     </p>
                   </div>
                   <div className={`font-bold text-lg ${
-                    tx.type === 'credit' 
+                    transaction.type === 'credit' 
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {tx.type === 'credit' ? '+' : '-'}{tx.amount.toLocaleString()}
+                    {transaction.type === 'credit' ? '+' : '-'}{transaction.amount.toLocaleString()}
                   </div>
                 </div>
-                {index < transactions.length - 1 && (
+                {index < currentTransactions.length - 1 && (
                   <Separator className="mx-2 bg-border/50" />
                 )}
               </div>
-            ))
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 mx-auto mb-4 bg-secondary/30 rounded-full flex items-center justify-center">
-                <Coins className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground font-medium">No transactions yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Complete quizzes to start earning coins!</p>
+            ))}
+          </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4 px-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="gap-1"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           )}
-          </ScrollArea>
-        </div>
-        
-        {/* Quick Actions */}
-        {transactions.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Total Transactions: {transactions.length}</span>
-              <span className="text-primary font-medium">
-                Net: {totalCredits - totalDebits > 0 ? '+' : ''}{(totalCredits - totalDebits).toLocaleString()}
-              </span>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

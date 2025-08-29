@@ -120,10 +120,16 @@ export function CoinAnalytics() {
       )
       .reduce((sum, t) => sum + t.amount, 0);
     
+    const quizEarnings = dayTransactions
+      .filter((t): t is ChartTransaction & { category: 'quiz' } => 
+        t.category === 'quiz' && t.type === 'credit'
+      )
+      .reduce((sum, t) => sum + t.amount, 0);
+    
     return {
       date: new Date(stat.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       coins: stat.coinsEarned,
-      quizzes: stat.quizzesTaken,
+      quizEarnings: quizEarnings,
       bonus: loginBonus,
       penalties: stat.penalties,
       transactions: dayTransactions as ChartTransaction[]
@@ -132,7 +138,7 @@ export function CoinAnalytics() {
     {
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       coins: totalCoinsEarned,
-      quizzes: totalQuizzesTaken,
+      quizEarnings: Math.floor(totalCoinsEarned * 0.7),
       bonus: Math.floor(totalCoinsEarned * 0.3),
       penalties: totalPenalties,
       transactions: []
@@ -332,8 +338,7 @@ export function CoinAnalytics() {
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                 }}
               />
-              <Bar dataKey="quizzes" fill="#8884d8" name="Quizzes" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="bonus" fill="#82ca9d" name="Login Bonus" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="quizEarnings" fill="#8a5cf6" name="Quiz Earnings" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

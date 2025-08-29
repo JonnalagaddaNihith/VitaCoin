@@ -6,9 +6,10 @@ import { Coins, TrendingUp, Sparkles } from "lucide-react";
 
 type BalanceCardProps = {
   balance: number;
+  rank?: number | null;
 };
 
-export function BalanceCard({ balance }: BalanceCardProps) {
+export function BalanceCard({ balance, rank }: BalanceCardProps) {
   const [displayBalance, setDisplayBalance] = useState(0);
 
   useEffect(() => {
@@ -53,8 +54,13 @@ export function BalanceCard({ balance }: BalanceCardProps) {
         <div className="flex items-baseline gap-2 mb-2">
           <div className="text-3xl font-bold font-headline bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             {displayBalance.toLocaleString()}
+            <span className="text-sm font-normal text-muted-foreground"> coins</span>
+            {rank !== null && rank !== undefined && (
+              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                Rank: {rank}
+              </span>
+            )}
           </div>
-          <div className="text-lg font-semibold text-primary/70">Coins</div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <TrendingUp className="h-3 w-3 text-primary" />
