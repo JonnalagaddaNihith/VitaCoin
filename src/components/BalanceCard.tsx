@@ -66,17 +66,6 @@ export function BalanceCard({ balance, rank }: BalanceCardProps) {
           <TrendingUp className="h-3 w-3 text-primary" />
           <span>Keep up the great work!</span>
         </div>
-        
-        {/* Progress Bar */}
-        <div className="mt-3 w-full bg-secondary/30 rounded-full h-2 overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-1000 ease-out"
-            style={{ width: `${Math.min((displayBalance / 1000) * 100, 100)}%` }}
-          />
-        </div>
-        <div className="mt-2 text-xs text-muted-foreground text-center">
-          {displayBalance >= 1000 ? '🎉 Level Up!' : `${1000 - displayBalance} more to level up`}
-        </div>
       </CardContent>
     </Card>
   );

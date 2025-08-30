@@ -80,30 +80,6 @@ export function DailyBonusCard({ onClaim, canClaim, loading, streak = 0 }: Daily
             </div>
           )}
         </Button>
-        
-        {/* Streak Progress */}
-        {streak > 0 && (
-          <div className="mt-4 text-center">
-            <div className="text-xs text-muted-foreground mb-2">
-              Streak Progress
-            </div>
-            <div className="flex justify-center gap-1">
-              {[...Array(7)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    i < Math.min(streak, 7) 
-                      ? 'bg-accent shadow-sm shadow-accent/50' 
-                      : 'bg-secondary/30'
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {streak >= 7 ? 'Max streak reached!' : `${7 - streak} more days for max bonus`}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
